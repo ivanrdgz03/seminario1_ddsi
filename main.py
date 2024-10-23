@@ -39,7 +39,7 @@ def opcion2(cursor):
         cursor.execute("INSERT INTO Pedido (Cpedido, Ccliente, Fecha_pedido) VALUES (?,?,?)",(Cpedido,Ccliente,Fecha_pedido))
         #print("cpedido ", Cpedido, "ccliente ", Ccliente , "fecha ", Fecha_pedido)
         
-        #print("Pendiente de implementar.", file=sys.stderr)
+        print("Pendiente de implementar.", file=sys.stderr)
 
 
     except oracledb.DatabaseError as errorBD:

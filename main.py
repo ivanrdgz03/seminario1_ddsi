@@ -1,4 +1,6 @@
-import oracledb;
+import oracledb
+import os
+import sys
 
 # Función para obtener las credenciales de un archivo externo "config.ini"
 # El formato de este archivo es el siguiente:
@@ -17,21 +19,64 @@ def get_credentials():
         file.close()
     return [user, password, dsn]
 
+#Esta función limpia la pantalla de la consola, para cuando se haga el menú
+def clear():
+    if(os.name == 'nt'):    #Si el sistema es windows se usa el comando cls si es otro se usa clear
+        os.system('cls')
+    else:
+        os.system('clear')
+        
+def opcion1(cursor):
+    print("Pendiente de implementar.", file=sys.stderr)
+    
+def opcion2(cursor):
+    print("Pendiente de implementar.", file=sys.stderr)
+    
+def opcion3(cursor):
+    print("Pendiente de implementar.", file=sys.stderr)
+    
+def opcion4(cursor):
+    return
+
+def imprimir_menu():
+    espaciado = 46
+    clear()
+    print("=" * espaciado)
+    print("               MENÚ INTERACTIVO")
+    print("=" * espaciado)
+    print("[1] Borrado y creación de tuplas predefinidas.")
+    print("[2] Dar de alta nuevo pedido.")
+    print("[3] Mostrar contenido de las tablas.")
+    print("[4] Salir.")
+    print("=" * espaciado)
+    
+def menu(cursor):
+    funciones = [opcion1,opcion2,opcion3,opcion4]
+    imprimir_menu()
+    opcion = int(input("Introduzca un número del 1 al 4: "))
+    while opcion not in range(1,5):
+        print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
+        opcion = int(input())
+    funciones[opcion-1](cursor)
+
 def main():
     try: 
         user, password, dsn = get_credentials()
-        con = oracledb.connect(user=user, password=password, dsn=dsn)
-        cursor = con.cursor()
+        conexion = oracledb.connect(user=user, password=password, dsn=dsn)
+        cursor = conexion.cursor()
         # Solicitudes y resto de codigo aquí
+        menu(cursor)
     except oracledb.DatabaseError as errorBD:   #Error al establecer la conexión de la base de datos
         error = errorBD.args[0]
         print("Error connecting to the database: ", error.message)
         print("Error code: ", error.code)
+    except KeyboardInterrupt:   #Si hacemos control + c
+        print("\nSaliendo con Ctrl+C...")
     except Exception as otroError:  #Otro tipo de error
         print("Another error: ", otroError)
     finally:    #Al final, pase lo que pase se cierran el cursor y la conexión
         cursor.close()
-        con.close()
+        conexion.close()
 
 if __name__ == "__main__":
     main()

@@ -27,8 +27,67 @@ def clear():
         os.system('clear')
         
 def opcion1(cursor):
-    print("Pendiente de implementar.", file=sys.stderr)
+    try:
+        # Borrar las tablas si existen
+        print("Eliminando tablas...")
+        cursor.execute("DROP TABLE Detalle_Pedido CASCADE CONSTRAINTS")
+        cursor.execute("DROP TABLE Pedido CASCADE CONSTRAINTS")
+        cursor.execute("DROP TABLE Stock CASCADE CONSTRAINTS")
+        
+        # Crear de nuevo las tablas
+        print("Creando tablas...")
+        cursor.execute("""
+            CREATE TABLE Stock (
+                Cproducto INT PRIMARY KEY,  
+                Cantidad INT                
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE Pedido (
+                Cpedido INT PRIMARY KEY,    
+                Ccliente INT,               
+                Fecha_pedido DATE          
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE Detalle_Pedido (
+                Cpedido INT,                
+                Cproducto INT,              
+                Cantidad INT,               
+                PRIMARY KEY (Cpedido, Cproducto), 
+                FOREIGN KEY (Cpedido) REFERENCES Pedido(Cpedido),  
+                FOREIGN KEY (Cproducto) REFERENCES Stock(Cproducto)
+            )
+        """)
+        
+        # Insertar los datos predefinidos en la tabla Stock
+        print("Insertando datos predefinidos en Stock...")
+        productos = [
+            (1, 100), (2, 50), (3, 200), (4, 75), (5, 150),
+            (6, 120), (7, 300), (8, 90), (9, 60), (10, 180)
+        ]
+        
+        for producto in productos:
+            cursor.execute("""
+                INSERT INTO Stock (Cproducto, Cantidad) 
+                VALUES (:1, :2)
+            """, producto)
+        
+        # Confirmar los cambios
+        cursor.connection.commit()
+        print("Tablas creadas y datos insertados correctamente.")
     
+    except oracledb.DatabaseError as errorBD:
+        error = errorBD.args[0]
+        print("Error in database operation: ", error.message)
+        print("Error code: ", error.code)
+        cursor.connection.rollback()  # Revertir cambios en caso de error
+    except Exception as otroError:
+        print("Another error: ", otroError)
+        cursor.connection.rollback()
+  
 def opcion2(cursor):
     print("Pendiente de implementar.", file=sys.stderr)
     

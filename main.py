@@ -89,7 +89,26 @@ def opcion1(cursor):
         cursor.connection.rollback()
   
 def opcion2(cursor):
-    print("Pendiente de implementar.", file=sys.stderr)
+    try:
+        Cpedido= int(input("Codigo del pedido: "))
+        Ccliente = int(input("Codigo del cliente: "))
+        fecha = input("Introduce una fecha (formato dd/mm/aaaa): ")
+        fecha2 = datetime.strptime(fecha, "%d/%m/%Y")
+        Fecha_pedido = fecha2.strftime("%Y-%m-%d")
+        cursor.execute("INSERT INTO Pedido (Cpedido, Ccliente, Fecha_pedido) VALUES (?,?,?)",(Cpedido,Ccliente,Fecha_pedido))
+        #print("cpedido ", Cpedido, "ccliente ", Ccliente , "fecha ", Fecha_pedido)
+        
+        print("Pendiente de implementar.", file=sys.stderr)
+
+
+    except oracledb.DatabaseError as errorBD:
+        error = errorBD.args[0]
+        print("Error in database operation: ", error.message)
+        print("Error code: ", error.code)
+        cursor.connection.rollback()  # Revertir cambios en caso de error
+    except Exception as otroError:
+        print("Another error: ", otroError)
+        cursor.connection.rollback()
     
 def opcion3(cursor):
     print("Pendiente de implementar.", file=sys.stderr)

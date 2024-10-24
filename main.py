@@ -9,7 +9,10 @@ from datetime import datetime
 #<dsn>
 def get_credentials():
     try:
-        with open('config.ini', 'r') as file:
+        #obtener ruta del fichero
+        directorio = os.path.dirname(os.path.abspath(__file__))
+        archivo = os.path.join(directorio, 'config.ini')
+        with open(archivo, 'r') as file:
             user = file.readline().strip()
             password = file.readline().strip()
             dsn = file.readline().strip()

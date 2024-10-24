@@ -26,7 +26,7 @@ def get_credentials():
 def get_create_table_query(cursor):
     try:
         directorio = os.path.dirname(__file__)
-        archivo = os.path.join(directorio, 'create_table.sql')
+        archivo = os.path.join(directorio, 'create_tables.sql')
         with open(archivo, 'r') as file:
             sql_script = file.read()
             

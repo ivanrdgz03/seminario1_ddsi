@@ -114,6 +114,14 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         
         Cproducto = int(input("Codigo del producto: "))
         Cantidad = int(input("Cantidad del producto: "))
+        cursor.execute("SELECT Cantidad FROM Stock WHERE Cproducto = :Cproducto", {"Cproducto": Cproducto})
+        resultado = cursor.fetchone()
+        Cantidad_disponible = resultado[0]
+       
+        if Cantidad > Cantidad_disponible:
+            print("Cantidad invalida")
+            return
+
         cursor.execute("""
             UPDATE Stock
             SET Cantidad = Cantidad - :cantidad_a_restar

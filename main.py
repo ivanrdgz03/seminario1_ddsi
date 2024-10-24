@@ -115,10 +115,14 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     cursor.execute("SELECT Cantidad FROM Stock WHERE Cproducto = :Cproducto", {"Cproducto": Cproducto})
     resultado = cursor.fetchone()
     Cantidad_disponible = resultado[0]
-    
-    if Cantidad > Cantidad_disponible:
-        print("Cantidad invalida")
-        return
+    print(Cantidad_disponible)
+    while True:
+        Cantidad = int(input("Cantidad del producto: "))
+        if Cantidad > Cantidad_disponible:
+            print("Cantidad inválida. Inténtalo de nuevo.")
+        else:
+            break  # Número válido y dentro del rango
+        
     cursor.execute("""
         UPDATE Stock
         SET Cantidad = Cantidad - :cantidad_a_restar
@@ -137,7 +141,6 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
             "Cantidad": Cantidad
             })
     menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
-
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
 

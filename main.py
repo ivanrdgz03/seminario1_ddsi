@@ -45,8 +45,9 @@ def opcion2(cursor):
             "Fecha_pedido": Fecha_pedido
             })
 
-        
-        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido)
+        Cantidad=0
+        Cproducto=0
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
         
         cursor.connection.commit()
 
@@ -68,7 +69,7 @@ def opcion4(cursor):
     return
 
 
-def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido):
+def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     try:
         Cproducto = int(input("Codigo del producto: "))
         Cantidad = int(input("Cantidad del producto: "))
@@ -94,7 +95,7 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido):
         
         
     
-        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido)
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
     except oracledb.DatabaseError as errorBD:
         error = errorBD.args[0]
@@ -106,7 +107,7 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido):
         cursor.connection.rollback()
 
 
-def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido):
+def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     try:
         cursor.execute("""
             DELETE FROM Detalle_Pedido
@@ -115,11 +116,18 @@ def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido):
             "Cpedido": Cpedido
         })
          
-        #Hay que actualizar la cantidad aquí
-
+        
+        cursor.execute("""
+            UPDATE Stock
+            SET Cantidad = Cantidad + :cantidad_a_sumar
+            WHERE Cproducto = :Cproducto
+        """, {
+            "cantidad_a_sumar": Cantidad,
+            "Cproducto": Cproducto
+        })
         
     
-        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido)
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
     
 
     except oracledb.DatabaseError as errorBD:
@@ -132,7 +140,7 @@ def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido):
         cursor.connection.rollback()
 
 
-def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido):
+def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     try:
         cursor.execute("""
             DELETE FROM Detalle_Pedido
@@ -164,7 +172,7 @@ def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido):
     
 
 
-def Finalizar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido):
+def Finalizar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     cursor.connection.commit()
 
     menu(cursor)
@@ -207,7 +215,7 @@ def menu(cursor):
     funciones[opcion-1](cursor)
 4
 
-def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido):
+def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     funciones = [Añadir_detalle,Eliminar_detalles,Cancelar_pedido,Finalizar_pedido]
     imprimir_menu_opcion2()
     opcion = int(input("Introduzca un número del 1 al 4: "))
@@ -215,7 +223,7 @@ def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido):
         print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
         opcion = int(input())
     
-    funciones[opcion-1](cursor,Cpedido,Ccliente,Fecha_pedido)
+    funciones[opcion-1](cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
     
 

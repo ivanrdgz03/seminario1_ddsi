@@ -71,6 +71,7 @@ def opcion4(cursor):
 
 def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     try:
+        
         Cproducto = int(input("Codigo del producto: "))
         Cantidad = int(input("Cantidad del producto: "))
         cursor.execute("""
@@ -126,7 +127,8 @@ def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
             "Cproducto": Cproducto
         })
         
-    
+        Cantidad = 0
+        
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
     
 

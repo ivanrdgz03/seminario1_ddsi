@@ -81,6 +81,8 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido):
             "Cproducto": Cproducto
         })
 
+        
+
         cursor.execute("""
                 INSERT INTO Detalle_Pedido (Cpedido, Cproducto, Cantidad) 
                 VALUES (:Cpedido, :Cproducto, :Cantidad )
@@ -90,7 +92,7 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido):
                 "Cantidad": Cantidad
                 })
         
-        cursor.connection.commit()
+        
     
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido)
 
@@ -105,18 +107,68 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido):
 
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido):
-    print("2")
-    return
+    try:
+        cursor.execute("""
+            DELETE FROM Detalle_Pedido
+            WHERE Cpedido = :Cpedido
+        """, {
+            "Cpedido": Cpedido
+        })
+         
+        #Hay que actualizar la cantidad aquí
+
+        
+    
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido)
+    
+
+    except oracledb.DatabaseError as errorBD:
+        error = errorBD.args[0]
+        print("Error in database operation: ", error.message)
+        print("Error code: ", error.code)
+        cursor.connection.rollback()  # Revertir cambios en caso de error
+    except Exception as otroError:
+        print("Another error: ", otroError)
+        cursor.connection.rollback()
 
 
 def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido):
-    print("3")
-    return
+    try:
+        cursor.execute("""
+            DELETE FROM Detalle_Pedido
+            WHERE Cpedido = :Cpedido
+        """, {
+            "Cpedido": Cpedido
+        })
+
+        cursor.execute("""
+            DELETE FROM Pedido
+            WHERE Cpedido = :Cpedido
+        """, {
+            "Cpedido": Cpedido
+        })
+
+       
+
+        menu(cursor)
+
+    except oracledb.DatabaseError as errorBD:
+        error = errorBD.args[0]
+        print("Error in database operation: ", error.message)
+        print("Error code: ", error.code)
+        cursor.connection.rollback()  # Revertir cambios en caso de error
+    except Exception as otroError:
+        print("Another error: ", otroError)
+        cursor.connection.rollback()
+
+    
 
 
 def Finalizar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido):
-    print("4")
-    return
+    cursor.connection.commit()
+
+    menu(cursor)
+    
 
 
 def imprimir_menu():

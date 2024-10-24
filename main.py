@@ -156,6 +156,14 @@ def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
             "Cpedido": Cpedido
         })
 
+        cursor.execute("""
+            UPDATE Stock
+            SET Cantidad = Cantidad + :cantidad_a_sumar
+            WHERE Cproducto = :Cproducto
+        """, {
+            "cantidad_a_sumar": Cantidad,
+            "Cproducto": Cproducto
+        })
        
 
         menu(cursor)

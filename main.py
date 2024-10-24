@@ -10,18 +10,36 @@ from datetime import datetime
 def get_credentials():
     try:
         #obtener ruta del fichero
-        directorio = os.path.dirname(os.path.abspath(__file__))
+        directorio = os.path.dirname(__file__)
         archivo = os.path.join(directorio, 'config.ini')
         with open(archivo, 'r') as file:
             user = file.readline().strip()
             password = file.readline().strip()
             dsn = file.readline().strip()
-    except FileNotFoundError as errorFNFE:  #Error al abrir el archivo
-        print("Error reading the file: ", errorFNFE)
+    except FileNotFoundError as errorArchivo:  #Error al abrir el archivo
+        print("Error reading the file: ", errorArchivo)
     finally:
         file.close()
     return [user, password, dsn]
-
+#Función para obtener las instrucciones de creación de la tabla del archivo "create_table.sql", 
+# estas instrucciones deben tener cada una al final ";" obligatoriamente.
+def get_create_table_query(cursor):
+    try:
+        directorio = os.path.dirname(__file__)
+        archivo = os.path.join(directorio, 'create_table.sql')
+        with open(archivo, 'r') as file:
+            sql_script = file.read()
+            
+        sql_commands = sql_script.split(';')
+        
+        for command in sql_commands:
+            cursor.execute(command)
+            
+    except FileNotFoundError as errorArchivo:
+        print("Error reading the file: ", errorArchivo)
+    finally:
+        file.close()
+        
 #Esta función limpia la pantalla de la consola, para cuando se haga el menú
 def clear():
     if(os.name == 'nt'):    #Si el sistema es windows se usa el comando cls si es otro se usa clear
@@ -227,7 +245,6 @@ def menu(cursor):
         print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
         opcion = int(input())
     funciones[opcion-1](cursor)
-4
 
 def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     funciones = [Añadir_detalle,Eliminar_detalles,Cancelar_pedido,Finalizar_pedido]

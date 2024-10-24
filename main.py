@@ -27,7 +27,6 @@ def clear():
         os.system('clear')
         
 def opcion1(cursor):
-    print("Pendiente de implementar.", file=sys.stderr)
     try:
         # Borrar las tablas si existen
         print("Eliminando tablas...")

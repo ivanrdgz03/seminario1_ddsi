@@ -110,50 +110,33 @@ def opcion4(cursor):
 
 
 def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
-    try:
-        
-        Cproducto = int(input("Codigo del producto: "))
-        Cantidad = int(input("Cantidad del producto: "))
-        cursor.execute("SELECT Cantidad FROM Stock WHERE Cproducto = :Cproducto", {"Cproducto": Cproducto})
-        resultado = cursor.fetchone()
-        Cantidad_disponible = resultado[0]
-       
-        if Cantidad > Cantidad_disponible:
-            print("Cantidad invalida")
-            return
-
-        cursor.execute("""
-            UPDATE Stock
-            SET Cantidad = Cantidad - :cantidad_a_restar
-            WHERE Cproducto = :Cproducto
-        """, {
-            "cantidad_a_restar": Cantidad,
-            "Cproducto": Cproducto
-        })
-
-        
-
-        cursor.execute("""
-                INSERT INTO Detalle_Pedido (Cpedido, Cproducto, Cantidad) 
-                VALUES (:Cpedido, :Cproducto, :Cantidad )
-                """, {
-                "Cpedido": Cpedido,
-                "Cproducto": Cproducto,
-                "Cantidad": Cantidad
-                })
-        
-        
+    Cproducto = int(input("Codigo del producto: "))
+    Cantidad = int(input("Cantidad del producto: "))
+    cursor.execute("SELECT Cantidad FROM Stock WHERE Cproducto = :Cproducto", {"Cproducto": Cproducto})
+    resultado = cursor.fetchone()
+    Cantidad_disponible = resultado[0]
     
-        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
-
-    except oracledb.DatabaseError as errorBD:
-        error = errorBD.args[0]
-        print("Error in database operation: ", error.message)
-        print("Error code: ", error.code)
-        cursor.connection.rollback()  # Revertir cambios en caso de error
-    except Exception as otroError:
-        print("Another error: ", otroError)
-        cursor.connection.rollback()
+    if Cantidad > Cantidad_disponible:
+        print("Cantidad invalida")
+        return
+    cursor.execute("""
+        UPDATE Stock
+        SET Cantidad = Cantidad - :cantidad_a_restar
+        WHERE Cproducto = :Cproducto
+    """, {
+        "cantidad_a_restar": Cantidad,
+        "Cproducto": Cproducto
+    })
+    
+    cursor.execute("""
+            INSERT INTO Detalle_Pedido (Cpedido, Cproducto, Cantidad) 
+            VALUES (:Cpedido, :Cproducto, :Cantidad )
+            """, {
+            "Cpedido": Cpedido,
+            "Cproducto": Cproducto,
+            "Cantidad": Cantidad
+            })
+    menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):

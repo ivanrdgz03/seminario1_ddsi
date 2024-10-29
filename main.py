@@ -278,12 +278,18 @@ def imprimir_menu_opcion2():
     print("[4] Finalizar pedido.")
     print("=" * espaciado)
 
-# Main GUI setup
-def create_gui(cursor):
-    # Create the main window
-    root = tk.Tk()
-    root.geometry('800x700')
-    root.title("Database Management")
+
+
+#Limpia ventana
+def clear_window(window):
+    # Elimina todos los widgets en la ventana dada
+    for widget in window.winfo_children():
+        widget.destroy()
+
+
+def menu_principal(cursor):
+    #Menu principal
+    clear_window(root)
 
     # Option 1: Create tables button
     create_table_btn = tk.Button(root, text="Borrar y Crear Tablas", font=("Arial", 20), command=lambda: opcion1(cursor))
@@ -315,6 +321,62 @@ def create_gui(cursor):
     global output_label
     output_label = tk.Label(root, text="", wraplength=400, font=("Arial", 20))
     output_label.pack(pady=20)
+
+
+
+def menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad):
+    #Menu secundario
+    clear_window(root)
+
+    # Etiqueta de título del menú secundario
+    tk.Label(root, text="Gestionar Pedido", font=("Arial", 20)).pack(pady=10)
+    
+    # Campo para ID del producto
+    tk.Label(root, text="Código del Producto:", font=("Arial", 15)).pack(pady=5)
+    product_id_entry = tk.Entry(root, width=50, font=("Arial", 15))
+    product_id_entry.pack(pady=5)
+
+    # Campo para cantidad del producto
+    tk.Label(root, text="Cantidad:", font=("Arial", 15)).pack(pady=5)
+    quantity_entry = tk.Entry(root, width=50, font=("Arial", 15))
+    quantity_entry.pack(pady=5)
+
+     # Botón para añadir detalle de producto
+    add_detail_btn = tk.Button(root, text="Añadir Detalle de Producto", font=("Arial", 15), 
+                               command=lambda: Añadir_detalle(cursor, Cpedido, Ccliente, Fecha_pedido,Cproducto, Cantidad ))
+    add_detail_btn.pack(pady=10)
+
+    # Botón para eliminar detalles del producto
+    delete_details_btn = tk.Button(root, text="Eliminar Detalles del Producto", font=("Arial", 15), 
+                                   command=lambda: Eliminar_detalles(cursor, Cpedido, Ccliente, Fecha_pedido,Cproducto, Cantidad ))
+    delete_details_btn.pack(pady=10)
+
+    # Botón para cancelar el pedido
+    cancel_order_btn = tk.Button(root, text="Cancelar Pedido", font=("Arial", 15), 
+                                 command=lambda: Cancelar_pedido(cursor, Cpedido, Ccliente, Fecha_pedido,Cproducto, Cantidad ))
+    cancel_order_btn.pack(pady=10)
+
+    # Botón para finalizar el pedido
+    finalize_order_btn = tk.Button(root, text="Finalizar Pedido", font=("Arial", 15), 
+                                   command=lambda: Finalizar_pedido(cursor))
+    finalize_order_btn.pack(pady=10)
+
+    global output_label_secundario
+    output_label_secundario = tk.Label(root, text="", wraplength=400, font=("Arial", 20))
+    output_label_secundario.pack(pady=20)
+
+
+
+
+# Main GUI setup
+def create_gui(cursor):
+    # Create the main window
+    global root
+    root = tk.Tk()
+    root.geometry('800x700')
+    root.title("Database Management")
+
+    menu_principal(cursor)
     
     # Start the GUI event loop
     root.mainloop()
@@ -342,7 +404,6 @@ def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     funciones[opcion-1](cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
     
-
 
 def main():
     global gui

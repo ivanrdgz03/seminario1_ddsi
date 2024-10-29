@@ -123,8 +123,21 @@ def opcion2(cursor):
     
     cursor.connection.commit()
     
+"""
+Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
+"""
 def opcion3(cursor):
-    output_label.config(text="Pendiente de implementar.")
+    tables = ["Stock", "Pedido", "Detalle_Pedido"]
+    for table in tables:
+        print(f"\nContenido de la tabla {table}:")
+        cursor.execute(f"SELECT * FROM {table}")
+        rows = cursor.fetchall()
+        if rows:
+            for row in rows:
+                print(row)
+        else:
+            print("La tabla está vacía.")
+
     
 def opcion4(cursor):
     return

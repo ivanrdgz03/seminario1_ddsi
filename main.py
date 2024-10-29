@@ -10,6 +10,9 @@ import tkinter as tk
 #<user>
 #<password>
 #<dsn>
+
+gui = True
+
 def get_credentials():
     try:
         #obtener ruta del fichero
@@ -20,7 +23,10 @@ def get_credentials():
             password = file.readline().strip()
             dsn = file.readline().strip()
     except FileNotFoundError as errorArchivo:  #Error al abrir el archivo
-        print("Error reading the file: ", errorArchivo)
+        if gui:
+            output_label.configure(text="Error reading the file: " + errorArchivo.args[0])
+        else:
+            print("Error reading the file: ", errorArchivo.args[0])
     finally:
         file.close()
     return [user, password, dsn]
@@ -39,7 +45,10 @@ def get_create_table_query(cursor):
             cursor.execute(command)
             
     except FileNotFoundError as errorArchivo:
-        print("Error reading the file: ", errorArchivo)
+        if gui:
+            output_label.configure(text="Error reading the file: " + errorArchivo.args[0])
+        else:
+            print("Error reading the file: ", errorArchivo.args[0])
     finally:
         file.close()
         
@@ -52,13 +61,19 @@ def clear():
         
 def opcion1(cursor):
     # Borrar las tablas si existen
-    print("Eliminando tablas...")
+    if gui:
+        output_label.configure(text="Eliminando tablas...")
+    else:
+        print("Eliminando tablas...")
     cursor.execute("DROP TABLE Detalle_Pedido CASCADE CONSTRAINTS")
     cursor.execute("DROP TABLE Pedido CASCADE CONSTRAINTS")
     cursor.execute("DROP TABLE Stock CASCADE CONSTRAINTS")
     
     # Crear de nuevo las tablas
-    print("Creando tablas...")
+    if gui:
+        output_label.configure(text="Creando tablas...")
+    else:
+        print("Creando tablas...")
     cursor.execute("""
         CREATE TABLE Stock (
         Cproducto INT PRIMARY KEY,  
@@ -86,7 +101,10 @@ def opcion1(cursor):
     """)
         
     # Insertar los datos predefinidos en la tabla Stock
-    print("Insertando datos predefinidos en Stock...")
+    if gui:
+        output_label.configure(text="Insertando datos predefinidos en Stock...")
+    else:
+        print("Insertando datos predefinidos en Stock...")
     productos = [
         (1, 100), (2, 50), (3, 200), (4, 75), (5, 150),
         (6, 120), (7, 300), (8, 90), (9, 60), (10, 180)
@@ -100,7 +118,10 @@ def opcion1(cursor):
         
     # Confirmar los cambios
     cursor.connection.commit()
-    print("Tablas creadas y datos insertados correctamente.")
+    if gui:
+        output_label.configure(text="Tablas creadas y datos insertados correctamente.")
+    else:
+        print("Tablas creadas y datos insertados correctamente.")
 
 def opcion2(cursor):
 
@@ -119,7 +140,10 @@ def opcion2(cursor):
         })
     Cantidad=0
     Cproducto=0
-    menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
+    if gui:
+        menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido)
+    else:
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
     
     cursor.connection.commit()
     
@@ -138,6 +162,7 @@ def opcion3(cursor):
         else:
             print("La tabla está vacía.")
 
+
     
 def opcion4(cursor):
     return
@@ -153,7 +178,10 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     while True:
         Cantidad = int(input("Cantidad del producto: "))
         if Cantidad > Cantidad_disponible:
-            print("Cantidad inválida. Inténtalo de nuevo.")
+            if(gui):
+                output_label_secundario.config(text="Cantidad inválida. Inténtalo de nuevo.")
+            else:
+                print("Cantidad inválida. Inténtalo de nuevo.")
         else:
             break  # Número válido y dentro del rango
         
@@ -196,7 +224,6 @@ def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     })
     
     Cantidad = 0
-    
     menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
@@ -220,13 +247,12 @@ def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         "cantidad_a_sumar": Cantidad,
         "Cproducto": Cproducto
     })
-    
     menu(cursor)
 
 def Finalizar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     cursor.connection.commit()
-
-    menu(cursor)
+    if(not gui):
+        menu(cursor)
 
 def imprimir_menu():
     espaciado = 46
@@ -295,13 +321,14 @@ def create_gui(cursor):
 
 
 def menu(cursor):
-    funciones = [opcion1,opcion2,opcion3,opcion4]
-    imprimir_menu()
-    opcion = int(input("Introduzca un número del 1 al 4: "))
-    while opcion not in range(1,5):
-        print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
-        opcion = int(input())
-    funciones[opcion-1](cursor)
+    if(not gui):
+        funciones = [opcion1,opcion2,opcion3,opcion4]
+        imprimir_menu()
+        opcion = int(input("Introduzca un número del 1 al 4: "))
+        while opcion not in range(1,5):
+            print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
+            opcion = int(input())
+        funciones[opcion-1](cursor)
 
 
 def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
@@ -318,23 +345,38 @@ def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
 
 
 def main():
-    try: 
+    global gui
+    try:
+        if(len(sys.argv) == 2 and sys.argv[1] == "--no-gui"):
+            gui = False
         user, password, dsn = get_credentials()
         conexion = oracledb.connect(user=user, password=password, dsn=dsn)
         cursor = conexion.cursor()
         # Solicitudes y resto de codigo aquí
-        create_gui(cursor)
-        menu(cursor)  
+        if(gui):
+            create_gui(cursor)
+        else:
+            menu(cursor)  
     except oracledb.DatabaseError as errorBD:   #Error al establecer la conexión de la base de datos
         error = errorBD.args[0]
-        print("Error connecting to the database: ", error.message)
-        print("Error code: ", error.code)
+        if(gui):
+            output_label.config(text="Error connecting to the database: " + error.message)
+            output_label.config(text="Error code: " + error.code)
+        else:
+            print("Error connecting to the database: ", error.message)
+            print("Error code: ", error.code)
         cursor.connection.rollback()
     except KeyboardInterrupt:   #Si hacemos control + c
-        print("\nSaliendo con Ctrl+C...")
+        if(gui):
+            output_label.config(text="Saliendo con Ctrl+C...")
+        else:
+            print("\nSaliendo con Ctrl+C...")
         cursor.connection.rollback()
     except Exception as otroError:  #Otro tipo de error
-        print("Another error: ", otroError)
+        if(gui):
+            output_label.config(text="Another error: " + otroError.args[0])
+        else:
+            print("Another error: ", otroError.args[0])
         cursor.connection.rollback()
     finally:    #Al final, pase lo que pase se cierran el cursor y la conexión
         cursor.close()

@@ -140,7 +140,10 @@ def opcion2(cursor):
         })
     Cantidad=0
     Cproducto=0
-    menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
+    if gui:
+        menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido)
+    else:
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
     
     cursor.connection.commit()
     
@@ -165,7 +168,7 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         Cantidad = int(input("Cantidad del producto: "))
         if Cantidad > Cantidad_disponible:
             if(gui):
-                output_label.config(text="Cantidad inválida. Inténtalo de nuevo.")
+                output_label_secundario.config(text="Cantidad inválida. Inténtalo de nuevo.")
             else:
                 print("Cantidad inválida. Inténtalo de nuevo.")
         else:

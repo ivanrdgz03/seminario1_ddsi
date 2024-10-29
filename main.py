@@ -2,6 +2,9 @@ import oracledb
 import os
 import sys
 from datetime import datetime
+from tkinter import *
+import tkinter as tk
+
 # Función para obtener las credenciales de un archivo externo "config.ini"
 # El formato de este archivo es el siguiente:
 #<user>
@@ -121,7 +124,7 @@ def opcion2(cursor):
     cursor.connection.commit()
     
 def opcion3(cursor):
-    print("Pendiente de implementar.", file=sys.stderr)
+    output_label.config(text="Pendiente de implementar.")
     
 def opcion4(cursor):
     return
@@ -236,6 +239,47 @@ def imprimir_menu_opcion2():
     print("[4] Finalizar pedido.")
     print("=" * espaciado)
 
+# Main GUI setup
+def create_gui(cursor):
+    # Create the main window
+    root = tk.Tk()
+    root.geometry('800x700')
+    root.title("Database Management")
+
+    # Option 1: Create tables button
+    create_table_btn = tk.Button(root, text="Borrar y Crear Tablas", font=("Arial", 20), command=lambda: opcion1(cursor))
+    create_table_btn.pack(pady=10)
+
+    # Option 2: Add new order
+    global order_id_entry, client_id_entry, order_date_entry
+    order_id_entry = tk.Entry(root, width=50, font=("Arial", 20))
+    client_id_entry = tk.Entry(root, width=50, font=("Arial", 20))
+    order_date_entry = tk.Entry(root, width=50, font=("Arial", 20))
+    
+    tk.Label(root, text="ID del Pedido:",font=("Arial", 20)).pack()
+    order_id_entry.pack(pady=10)
+    
+    tk.Label(root, text="ID del Cliente:", font=("Arial", 20)).pack()
+    client_id_entry.pack(pady=10)
+    
+    tk.Label(root, text="Fecha del Pedido (dd/mm/yyyy):", font=("Arial", 20)).pack()
+    order_date_entry.pack(pady=10)
+    
+    add_order_btn = tk.Button(root, text="Añadir Nuevo Pedido", font=("Arial", 20), command=lambda: opcion2(cursor))
+    add_order_btn.pack(pady=20)
+    
+    # Option 3: Show table contents
+    show_tables_btn = tk.Button(root, text="Mostrar Stock", font=("Arial", 20) ,command=lambda: opcion3(cursor))
+    show_tables_btn.pack(pady=20)
+    
+    # Output Label to show results/errors
+    global output_label
+    output_label = tk.Label(root, text="", wraplength=400, font=("Arial", 20))
+    output_label.pack(pady=20)
+    
+    # Start the GUI event loop
+    root.mainloop()
+
 
 def menu(cursor):
     funciones = [opcion1,opcion2,opcion3,opcion4]
@@ -245,6 +289,7 @@ def menu(cursor):
         print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
         opcion = int(input())
     funciones[opcion-1](cursor)
+
 
 def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     funciones = [Añadir_detalle,Eliminar_detalles,Cancelar_pedido,Finalizar_pedido]
@@ -265,7 +310,8 @@ def main():
         conexion = oracledb.connect(user=user, password=password, dsn=dsn)
         cursor = conexion.cursor()
         # Solicitudes y resto de codigo aquí
-        menu(cursor)
+        create_gui(cursor)
+        menu(cursor)  
     except oracledb.DatabaseError as errorBD:   #Error al establecer la conexión de la base de datos
         error = errorBD.args[0]
         print("Error connecting to the database: ", error.message)

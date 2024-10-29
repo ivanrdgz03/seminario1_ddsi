@@ -124,10 +124,15 @@ def opcion1(cursor):
         print("Tablas creadas y datos insertados correctamente.")
 
 def opcion2(cursor):
-
-    Cpedido= int(input("Codigo del pedido: "))
-    Ccliente = int(input("Codigo del cliente: "))
-    fecha = input("Introduce una fecha (formato dd/mm/aaaa): ")
+    if(gui):
+        Cpedido = int(order_id_entry.get())
+        Ccliente = int(client_id_entry.get())
+        fecha = order_date_entry.get()
+    else:
+        Cpedido= int(input("Codigo del pedido: "))
+        Ccliente = int(input("Codigo del cliente: "))
+        fecha = input("Introduce una fecha (formato dd/mm/aaaa): ")
+        
     fecha2 = datetime.strptime(fecha, "%d/%m/%Y")
     Fecha_pedido = fecha2.strftime("%d-%m-%Y")
     cursor.execute("""
@@ -141,7 +146,7 @@ def opcion2(cursor):
     Cantidad=0
     Cproducto=0
     if gui:
-        menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido)
+        menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad)
     else:
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
     
@@ -151,10 +156,10 @@ def opcion2(cursor):
 Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
 """
 def opcion3(cursor):
-    tables = ["Stock", "Pedido", "Detalle_Pedido"]
-    for table in tables:
-        print(f"\nContenido de la tabla {table}:")
-        cursor.execute(f"SELECT * FROM {table}")
+    tablas = ["Stock", "Pedido", "Detalle_Pedido"]
+    for tabla in tablas:
+        print(f"\nContenido de la tabla {tabla}:")
+        cursor.execute(f"SELECT * FROM {tabla}")
         rows = cursor.fetchall()
         if rows:
             for row in rows:
@@ -169,21 +174,28 @@ def opcion4(cursor):
 
 
 def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
-    Cproducto = int(input("Codigo del producto: "))
-    Cantidad = int(input("Cantidad del producto: "))
+    if gui:
+        Cproducto = int(product_id_entry.get())
+        Cantidad = int(quantity_entry.get())
+    else:
+        Cproducto = int(input("Codigo del producto: "))
+        Cantidad = int(input("Cantidad del producto: "))
     cursor.execute("SELECT Cantidad FROM Stock WHERE Cproducto = :Cproducto", {"Cproducto": Cproducto})
     resultado = cursor.fetchone()
-    Cantidad_disponible = resultado[0]
-    print(Cantidad_disponible)
-    while True:
-        Cantidad = int(input("Cantidad del producto: "))
-        if Cantidad > Cantidad_disponible:
-            if(gui):
-                output_label_secundario.config(text="Cantidad inválida. Inténtalo de nuevo.")
-            else:
-                print("Cantidad inválida. Inténtalo de nuevo.")
+    if resultado != None:
+        Cantidad_disponible = resultado[0]
+    else:
+        if gui:
+            output_label_secundario.config(text="Codigo de producto incorrecto")
         else:
-            break  # Número válido y dentro del rango
+            print("Codigo de producto incorrecto")
+        return
+    while Cantidad > Cantidad_disponible:
+        if gui:
+            output_label_secundario.config(text="Cantidad del producto incorrecta")
+            Cantidad = int(quantity_entry.get())
+        else:
+            Cantidad = int(input("Cantidad invalida, introduzcala de nuevo: "))
         
     cursor.execute("""
         UPDATE Stock
@@ -202,7 +214,8 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
             "Cproducto": Cproducto,
             "Cantidad": Cantidad
             })
-    menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
+    if not gui:
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
 
@@ -224,7 +237,8 @@ def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     })
     
     Cantidad = 0
-    menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
+    if not gui:
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     cursor.execute("""
@@ -247,12 +261,17 @@ def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         "cantidad_a_sumar": Cantidad,
         "Cproducto": Cproducto
     })
-    menu(cursor)
+    if gui:
+        menu_principal(cursor)
+    else:
+        menu(cursor)
 
 def Finalizar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     cursor.connection.commit()
     if(not gui):
         menu(cursor)
+    else:
+        root.destroy()
 
 def imprimir_menu():
     espaciado = 46
@@ -327,7 +346,7 @@ def menu_principal(cursor):
 def menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad):
     #Menu secundario
     clear_window(root)
-
+    global product_id_entry, quantity_entry
     # Etiqueta de título del menú secundario
     tk.Label(root, text="Gestionar Pedido", font=("Arial", 20)).pack(pady=10)
     
@@ -358,7 +377,7 @@ def menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad):
 
     # Botón para finalizar el pedido
     finalize_order_btn = tk.Button(root, text="Finalizar Pedido", font=("Arial", 15), 
-                                   command=lambda: Finalizar_pedido(cursor))
+                                   command=lambda: Finalizar_pedido(cursor, Cpedido, Ccliente, Fecha_pedido,Cproducto, Cantidad ))
     finalize_order_btn.pack(pady=10)
 
     global output_label_secundario

@@ -129,6 +129,7 @@ def opcion2(cursor):
     
 def opcion3(cursor):
     output_label.config(text="Pendiente de implementar.")
+
     
 def opcion4(cursor):
     return

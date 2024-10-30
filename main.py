@@ -179,37 +179,16 @@ def opcion2(cursor):
 #Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
 
 def opcion3(cursor):
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-    output_label.config(text="Pendiente de implementar.")
-=======
-    tablas = ["Stock", "Pedido", "Detalle_Pedido"]
-    for tabla in tablas:
-        print(f"\nContenido de la tabla {tabla}:")
-        cursor.execute(f"SELECT * FROM {tabla}")
-        rows = cursor.fetchall()
-        if rows:
-            for row in rows:
-                if(len(row) == 3 and isinstance(row[2], datetime)):
-                    print(f"({row[0]}, {row[1]}, {row[2].strftime('%d/%m/%Y')})")
-                else:
-                    print(row)
-        else:
-            print("La tabla está vacía.")
-
->>>>>>> main
-=======
-    # Lista de tablas a mostrar
     tablas = ["Stock", "Pedido", "Detalle_Pedido"]
     if(gui):
         # Crea una nueva ventana para mostrar las tablas
         ventana_tablas = tk.Toplevel(root)
-        ventana_tablas.geometry('1200x600')
+        ventana_tablas.geometry('1300x600')
         ventana_tablas.title("Contenido de las Tablas")
 
         # Recorre cada tabla y muestra su contenido
         for tabla_index, tabla in enumerate(tablas):
-            tk.Label(ventana_tablas, text=f"Contenido de la tabla {tabla}:  ", font=("Arial", 14, "bold")).grid(row=0, column=tabla_index*3, columnspan=3, pady=10)
+            tk.Label(ventana_tablas, text=f"Contenido de la tabla {tabla}:      ", font=("Arial", 14, "bold")).grid(row=0, column=tabla_index*3, columnspan=3, pady=10)
 
             # Ejecuta la consulta para obtener los datos de la tabla actual
             cursor.execute(f"SELECT * FROM {tabla}")
@@ -248,7 +227,6 @@ def opcion3(cursor):
                         print(row)
             else:
                 print("La tabla está vacía.")
->>>>>>> Stashed changes
 
     
 def opcion4(cursor):

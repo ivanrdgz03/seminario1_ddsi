@@ -179,6 +179,7 @@ def opcion2(cursor):
 #Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
 
 def opcion3(cursor):
+<<<<<<< Updated upstream
 <<<<<<< HEAD
     output_label.config(text="Pendiente de implementar.")
 =======
@@ -197,6 +198,57 @@ def opcion3(cursor):
             print("La tabla está vacía.")
 
 >>>>>>> main
+=======
+    # Lista de tablas a mostrar
+    tablas = ["Stock", "Pedido", "Detalle_Pedido"]
+    if(gui):
+        # Crea una nueva ventana para mostrar las tablas
+        ventana_tablas = tk.Toplevel(root)
+        ventana_tablas.geometry('1200x600')
+        ventana_tablas.title("Contenido de las Tablas")
+
+        # Recorre cada tabla y muestra su contenido
+        for tabla_index, tabla in enumerate(tablas):
+            tk.Label(ventana_tablas, text=f"Contenido de la tabla {tabla}:  ", font=("Arial", 14, "bold")).grid(row=0, column=tabla_index*3, columnspan=3, pady=10)
+
+            # Ejecuta la consulta para obtener los datos de la tabla actual
+            cursor.execute(f"SELECT * FROM {tabla}")
+            rows = cursor.fetchall()
+            
+            # Si hay filas, las muestra en una cuadrícula, si no, muestra un mensaje de vacío
+            if rows:
+                # Añade los encabezados de columnas
+                columns = [desc[0] for desc in cursor.description]
+                for col_index, column_name in enumerate(columns):
+                    tk.Label(ventana_tablas, text=column_name, font=("Arial", 12, "bold")).grid(row=1, column=tabla_index*3 + col_index, padx=5, pady=5)
+
+                # Muestra los datos en la cuadrícula
+                for row_index, row in enumerate(rows, start=2):
+                    for col_index, cell in enumerate(row):
+                        # Formatea las fechas en el formato deseado
+                        if isinstance(cell, datetime):
+                            cell_text = cell.strftime('%d/%m/%Y')
+                        else:
+                            cell_text = str(cell)
+                        
+                        tk.Label(ventana_tablas, text=cell_text, font=("Arial", 10)).grid(row=row_index, column=tabla_index*3 + col_index, padx=5, pady=5)
+            else:
+                # Muestra un mensaje indicando que la tabla está vacía
+                tk.Label(ventana_tablas, text="La tabla está vacía.", font=("Arial", 10, "italic")).grid(row=1, column=tabla_index*3, columnspan=3, pady=10)
+    else:
+        for tabla in tablas:
+            print(f"\nContenido de la tabla {tabla}:")
+            cursor.execute(f"SELECT * FROM {tabla}")
+            rows = cursor.fetchall()
+            if rows:
+                for row in rows:
+                    if(len(row) == 3 and isinstance(row[2], datetime)):
+                        print(f"({row[0]}, {row[1]}, {row[2].strftime('%d/%m/%Y')})")
+                    else:
+                        print(row)
+            else:
+                print("La tabla está vacía.")
+>>>>>>> Stashed changes
 
     
 def opcion4(cursor):

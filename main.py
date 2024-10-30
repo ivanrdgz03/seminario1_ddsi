@@ -163,7 +163,10 @@ def opcion3(cursor):
         rows = cursor.fetchall()
         if rows:
             for row in rows:
-                print(row)
+                if(len(row) == 3 and isinstance(row[2], datetime)):
+                    print(f"({row[0]}, {row[1]}, {row[2].strftime('%d/%m/%Y')})")
+                else:
+                    print(row)
         else:
             print("La tabla está vacía.")
 

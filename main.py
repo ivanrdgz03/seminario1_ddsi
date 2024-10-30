@@ -132,8 +132,21 @@ def opcion2(cursor):
         Cpedido= int(input("Codigo del pedido: "))
         Ccliente = int(input("Codigo del cliente: "))
         fecha = input("Introduce una fecha (formato dd/mm/aaaa): ")
-        
-    fecha2 = datetime.strptime(fecha, "%d/%m/%Y")
+    try:
+        fecha2 = datetime.strptime(fecha, "%d/%m/%Y")
+    except ValueError:
+        if gui:
+            output_label.config(text="Formato de fecha incorrecto")
+        else:
+            print("Formato de fecha incorrecto")
+        return
+    cursor.execute("SELECT * FROM Pedido WHERE Cpedido = :Cpedido", {"Cpedido": Cpedido})
+    if cursor.fetchone() != None:
+        if gui:
+            output_label.config(text="Codigo de pedido ya existente")
+        else:
+            print("Codigo de pedido ya existente")
+        return
     Fecha_pedido = fecha2.strftime("%d-%m-%Y")
     cursor.execute("""
         INSERT INTO Pedido (Cpedido, Ccliente, Fecha_pedido) 
@@ -152,9 +165,9 @@ def opcion2(cursor):
     
     cursor.connection.commit()
     
-"""
-Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
-"""
+
+#Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
+
 def opcion3(cursor):
     tablas = ["Stock", "Pedido", "Detalle_Pedido"]
     for tabla in tablas:
@@ -193,11 +206,11 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         else:
             print("Codigo de producto incorrecto")
         return
-    while Cantidad > Cantidad_disponible:
-        if gui:
-            output_label_secundario.config(text="Cantidad del producto incorrecta")
-            Cantidad = int(quantity_entry.get())
-        else:
+    if Cantidad > Cantidad_disponible and gui:
+        output_label_secundario.config(text="Cantidad del producto incorrecta")
+        return
+    if Cantidad > Cantidad_disponible and not gui:
+        while Cantidad > Cantidad_disponible:
             Cantidad = int(input("Cantidad invalida, introduzcala de nuevo: "))
         
     cursor.execute("""
@@ -217,7 +230,10 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
             "Cproducto": Cproducto,
             "Cantidad": Cantidad
             })
-    if not gui:
+    if gui:
+        output_label_secundario.config(text="Detalle añadido correctamente")
+    else:
+        print("Detalle añadido correctamente")
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
@@ -240,7 +256,10 @@ def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     })
     
     Cantidad = 0
-    if not gui:
+    if gui:
+        output_label_secundario.config(text="Detalles eliminados correctamente")
+    else:
+        print("Detalles eliminados correctamente")
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):

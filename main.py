@@ -10,21 +10,48 @@ import tkinter as tk
 #<user>
 #<password>
 #<dsn>
+
+gui = True
+
 def get_credentials():
     try:
         #obtener ruta del fichero
-        directorio = os.path.dirname(os.path.abspath(__file__))
+        directorio = os.path.dirname(__file__)
         archivo = os.path.join(directorio, 'config.ini')
         with open(archivo, 'r') as file:
             user = file.readline().strip()
             password = file.readline().strip()
             dsn = file.readline().strip()
-    except FileNotFoundError as errorFNFE:  #Error al abrir el archivo
-        print("Error reading the file: ", errorFNFE)
+    except FileNotFoundError as errorArchivo:  #Error al abrir el archivo
+        if gui:
+            output_label.configure(text="Error reading the file: " + errorArchivo.args[0])
+        else:
+            print("Error reading the file: ", errorArchivo.args[0])
     finally:
         file.close()
     return [user, password, dsn]
-
+#Función para obtener las instrucciones de creación de la tabla del archivo "create_table.sql", 
+# estas instrucciones deben tener cada una al final ";" obligatoriamente.
+def get_create_table_query(cursor):
+    try:
+        directorio = os.path.dirname(__file__)
+        archivo = os.path.join(directorio, 'create_tables.sql')
+        with open(archivo, 'r') as file:
+            sql_script = file.read()
+            
+        sql_commands = sql_script.split(';')
+        
+        for command in sql_commands:
+            cursor.execute(command)
+            
+    except FileNotFoundError as errorArchivo:
+        if gui:
+            output_label.configure(text="Error reading the file: " + errorArchivo.args[0])
+        else:
+            print("Error reading the file: ", errorArchivo.args[0])
+    finally:
+        file.close()
+        
 #Esta función limpia la pantalla de la consola, para cuando se haga el menú
 def clear():
     if(os.name == 'nt'):    #Si el sistema es windows se usa el comando cls si es otro se usa clear
@@ -33,102 +60,143 @@ def clear():
         os.system('clear')
         
 def opcion1(cursor):
-    try:
-        # Borrar las tablas si existen
+    # Borrar las tablas si existen
+    if gui:
+        output_label.configure(text="Eliminando tablas...")
+    else:
         print("Eliminando tablas...")
-        cursor.execute("DROP TABLE Detalle_Pedido CASCADE CONSTRAINTS")
-        cursor.execute("DROP TABLE Pedido CASCADE CONSTRAINTS")
-        cursor.execute("DROP TABLE Stock CASCADE CONSTRAINTS")
-        
-        # Crear de nuevo las tablas
+    cursor.execute("DROP TABLE Detalle_Pedido CASCADE CONSTRAINTS")
+    cursor.execute("DROP TABLE Pedido CASCADE CONSTRAINTS")
+    cursor.execute("DROP TABLE Stock CASCADE CONSTRAINTS")
+    
+    # Crear de nuevo las tablas
+    if gui:
+        output_label.configure(text="Creando tablas...")
+    else:
         print("Creando tablas...")
-        cursor.execute("""
-            CREATE TABLE Stock (
-                Cproducto INT PRIMARY KEY,  
-                Cantidad INT                
-            )
-        """)
+    cursor.execute("""
+        CREATE TABLE Stock (
+        Cproducto INT PRIMARY KEY,  
+            Cantidad INT                
+        )
+    """)
         
-        cursor.execute("""
-            CREATE TABLE Pedido (
-                Cpedido INT PRIMARY KEY,    
-                Ccliente INT,               
-                Fecha_pedido DATE          
-            )
-        """)
+    cursor.execute("""
+        CREATE TABLE Pedido (
+            Cpedido INT PRIMARY KEY,    
+            Ccliente INT,               
+            Fecha_pedido DATE          
+        )
+    """)
         
-        cursor.execute("""
-            CREATE TABLE Detalle_Pedido (
-                Cpedido INT,                
-                Cproducto INT,              
-                Cantidad INT,               
-                PRIMARY KEY (Cpedido, Cproducto), 
-                FOREIGN KEY (Cpedido) REFERENCES Pedido(Cpedido),  
-                FOREIGN KEY (Cproducto) REFERENCES Stock(Cproducto)
-            )
-        """)
+    cursor.execute("""
+        CREATE TABLE Detalle_Pedido (
+            Cpedido INT,                
+            Cproducto INT,              
+            Cantidad INT,               
+            PRIMARY KEY (Cpedido, Cproducto), 
+            FOREIGN KEY (Cpedido) REFERENCES Pedido(Cpedido),  
+            FOREIGN KEY (Cproducto) REFERENCES Stock(Cproducto)
+        )
+    """)
         
-        # Insertar los datos predefinidos en la tabla Stock
+    # Insertar los datos predefinidos en la tabla Stock
+    if gui:
+        output_label.configure(text="Insertando datos predefinidos en Stock...")
+    else:
         print("Insertando datos predefinidos en Stock...")
-        productos = [
-            (1, 100), (2, 50), (3, 200), (4, 75), (5, 150),
-            (6, 120), (7, 300), (8, 90), (9, 60), (10, 180)
-        ]
+    productos = [
+        (1, 100), (2, 50), (3, 200), (4, 75), (5, 150),
+        (6, 120), (7, 300), (8, 90), (9, 60), (10, 180)
+    ]
         
-        for producto in productos:
-            cursor.execute("""
-                INSERT INTO Stock (Cproducto, Cantidad) 
-                VALUES (:1, :2)
-            """, producto)
+    for producto in productos:
+        cursor.execute("""
+            INSERT INTO Stock (Cproducto, Cantidad) 
+            VALUES (:1, :2)
+        """, producto)
         
-        # Confirmar los cambios
-        cursor.connection.commit()
+    # Confirmar los cambios
+    cursor.connection.commit()
+    if gui:
+        output_label.configure(text="Tablas creadas y datos insertados correctamente.")
+    else:
         print("Tablas creadas y datos insertados correctamente.")
 
-    except oracledb.DatabaseError as errorBD:
-        error = errorBD.args[0]
-        print("Error in database operation: ", error.message)
-        print("Error code: ", error.code)
-        cursor.connection.rollback()  # Revertir cambios en caso de error
-    except Exception as otroError:
-        print("Another error: ", otroError)
-        cursor.connection.rollback()
-    
 def opcion2(cursor):
-    try:
+    if(gui):
+        Cpedido = int(order_id_entry.get())
+        Ccliente = int(client_id_entry.get())
+        fecha = order_date_entry.get()
+    else:
         Cpedido= int(input("Codigo del pedido: "))
         Ccliente = int(input("Codigo del cliente: "))
         fecha = input("Introduce una fecha (formato dd/mm/aaaa): ")
+    if Cpedido <0:
+        if gui:
+            output_label.config(text="Codigo de pedido incorrecto")
+        else:
+            print("Codigo de pedido incorrecto")
+        return
+    if Ccliente <0:
+        if gui:
+            output_label.config(text="Codigo de cliente incorrecto")
+        else:
+            print("Codigo de cliente incorrecto")
+        return
+    try:
         fecha2 = datetime.strptime(fecha, "%d/%m/%Y")
-        Fecha_pedido = fecha2.strftime("%d-%m-%Y")
-        cursor.execute("""
-            INSERT INTO Pedido (Cpedido, Ccliente, Fecha_pedido) 
-            VALUES (:Cpedido, :Ccliente, TO_DATE(:Fecha_pedido, 'DD-MM-YYYY'))
-            """, {
-            "Cpedido": Cpedido,
-            "Ccliente": Ccliente,
-            "Fecha_pedido": Fecha_pedido
-            })
-
-        Cantidad=0
-        Cproducto=0
+    except ValueError:
+        if gui:
+            output_label.config(text="Formato de fecha incorrecto")
+        else:
+            print("Formato de fecha incorrecto")
+        return
+    cursor.execute("SELECT * FROM Pedido WHERE Cpedido = :Cpedido", {"Cpedido": Cpedido})
+    if cursor.fetchone() != None:
+        if gui:
+            output_label.config(text="Codigo de pedido ya existente")
+        else:
+            print("Codigo de pedido ya existente")
+        return
+    Fecha_pedido = fecha2.strftime("%d-%m-%Y")
+    cursor.execute("""
+        INSERT INTO Pedido (Cpedido, Ccliente, Fecha_pedido) 
+        VALUES (:Cpedido, :Ccliente, TO_DATE(:Fecha_pedido, 'DD-MM-YYYY'))
+        """, {
+        "Cpedido": Cpedido,
+        "Ccliente": Ccliente,
+        "Fecha_pedido": Fecha_pedido
+        })
+    Cantidad=0
+    Cproducto=0
+    if gui:
+        menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad)
+    else:
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
-        
-        cursor.connection.commit()
-
-    except oracledb.DatabaseError as errorBD:
-        error = errorBD.args[0]
-        print("Error in database operation: ", error.message)
-        print("Error code: ", error.code)
-        cursor.connection.rollback()  # Revertir cambios en caso de error
-    except Exception as otroError:
-        print("Another error: ", otroError)
-        cursor.connection.rollback()
-
-   
     
+
+#Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
+
 def opcion3(cursor):
+<<<<<<< HEAD
     output_label.config(text="Pendiente de implementar.")
+=======
+    tablas = ["Stock", "Pedido", "Detalle_Pedido"]
+    for tabla in tablas:
+        print(f"\nContenido de la tabla {tabla}:")
+        cursor.execute(f"SELECT * FROM {tabla}")
+        rows = cursor.fetchall()
+        if rows:
+            for row in rows:
+                if(len(row) == 3 and isinstance(row[2], datetime)):
+                    print(f"({row[0]}, {row[1]}, {row[2].strftime('%d/%m/%Y')})")
+                else:
+                    print(row)
+        else:
+            print("La tabla está vacía.")
+
+>>>>>>> main
 
     
 def opcion4(cursor):
@@ -136,124 +204,120 @@ def opcion4(cursor):
 
 
 def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
-    try:
-        
+    if gui:
+        Cproducto = int(product_id_entry.get())
+        Cantidad = int(quantity_entry.get())
+    else:
         Cproducto = int(input("Codigo del producto: "))
         Cantidad = int(input("Cantidad del producto: "))
-        cursor.execute("""
-            UPDATE Stock
-            SET Cantidad = Cantidad - :cantidad_a_restar
-            WHERE Cproducto = :Cproducto
-        """, {
-            "cantidad_a_restar": Cantidad,
-            "Cproducto": Cproducto
-        })
-
+    cursor.execute("SELECT Cantidad FROM Stock WHERE Cproducto = :Cproducto", {"Cproducto": Cproducto})
+    resultado = cursor.fetchone()
+    if resultado != None:
+        Cantidad_disponible = resultado[0]
+    else:
+        if gui:
+            output_label_secundario.config(text="Codigo de producto incorrecto")
+        else:
+            print("Codigo de producto incorrecto")
+        return
+    if Cantidad > Cantidad_disponible or Cantidad <=0:
+        if gui:
+            output_label_secundario.config(text="Cantidad del producto incorrecta")
+            return
+        else:
+            while Cantidad > Cantidad_disponible:
+                Cantidad = int(input("Cantidad invalida, introduzcala de nuevo: "))
         
-
-        cursor.execute("""
-                INSERT INTO Detalle_Pedido (Cpedido, Cproducto, Cantidad) 
-                VALUES (:Cpedido, :Cproducto, :Cantidad )
-                """, {
-                "Cpedido": Cpedido,
-                "Cproducto": Cproducto,
-                "Cantidad": Cantidad
-                })
-        
-        
+    cursor.execute("""
+        UPDATE Stock
+        SET Cantidad = Cantidad - :cantidad_a_restar
+        WHERE Cproducto = :Cproducto
+    """, {
+        "cantidad_a_restar": Cantidad,
+        "Cproducto": Cproducto
+    })
     
+    cursor.execute("""
+            INSERT INTO Detalle_Pedido (Cpedido, Cproducto, Cantidad) 
+            VALUES (:Cpedido, :Cproducto, :Cantidad )
+            """, {
+            "Cpedido": Cpedido,
+            "Cproducto": Cproducto,
+            "Cantidad": Cantidad
+            })
+    if gui:
+        output_label_secundario.config(text="Detalle añadido correctamente")
+    else:
+        print("Detalle añadido correctamente")
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
-
-    except oracledb.DatabaseError as errorBD:
-        error = errorBD.args[0]
-        print("Error in database operation: ", error.message)
-        print("Error code: ", error.code)
-        cursor.connection.rollback()  # Revertir cambios en caso de error
-    except Exception as otroError:
-        print("Another error: ", otroError)
-        cursor.connection.rollback()
-
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
-    try:
-        cursor.execute("""
-            DELETE FROM Detalle_Pedido
-            WHERE Cpedido = :Cpedido
-        """, {
-            "Cpedido": Cpedido
-        })
-         
-        
-        cursor.execute("""
-            UPDATE Stock
-            SET Cantidad = Cantidad + :cantidad_a_sumar
-            WHERE Cproducto = :Cproducto
-        """, {
-            "cantidad_a_sumar": Cantidad,
-            "Cproducto": Cproducto
-        })
-        
-        Cantidad = 0
-        
-        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
+    cursor.execute("""SELECT * FROM Detalle_Pedido WHERE Cpedido = :Cpedido""", {"Cpedido": Cpedido})
+    if cursor.fetchone() == None:
+        if gui:
+            output_label_secundario.config(text="No hay detalles que eliminar")
+        else:
+            print("No hay detalles que eliminar")
+        return
+    cursor.execute("""SELECT Cproducto, Cantidad FROM Detalle_Pedido WHERE Cpedido = :Cpedido""", {"Cpedido": Cpedido})
+    data = cursor.fetchall()
+    Cantidad = data[0][1]
+    Cproducto = data[0][0]
+    cursor.execute("""
+        DELETE FROM Detalle_Pedido
+        WHERE Cpedido = :Cpedido
+    """, {
+        "Cpedido": Cpedido
+    })
+     
     
-
-    except oracledb.DatabaseError as errorBD:
-        error = errorBD.args[0]
-        print("Error in database operation: ", error.message)
-        print("Error code: ", error.code)
-        cursor.connection.rollback()  # Revertir cambios en caso de error
-    except Exception as otroError:
-        print("Another error: ", otroError)
-        cursor.connection.rollback()
-
+    cursor.execute("""
+        UPDATE Stock
+        SET Cantidad = Cantidad + :cantidad_a_sumar
+        WHERE Cproducto = :Cproducto
+    """, {
+        "cantidad_a_sumar": Cantidad,
+        "Cproducto": Cproducto
+    })
+    
+    if gui:
+        output_label_secundario.config(text="Detalles eliminados correctamente")
+    else:
+        print("Detalles eliminados correctamente")
+        menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Cancelar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
-    try:
-        cursor.execute("""
-            DELETE FROM Detalle_Pedido
-            WHERE Cpedido = :Cpedido
-        """, {
-            "Cpedido": Cpedido
-        })
-
-        cursor.execute("""
-            DELETE FROM Pedido
-            WHERE Cpedido = :Cpedido
-        """, {
-            "Cpedido": Cpedido
-        })
-
-        cursor.execute("""
-            UPDATE Stock
-            SET Cantidad = Cantidad + :cantidad_a_sumar
-            WHERE Cproducto = :Cproducto
-        """, {
-            "cantidad_a_sumar": Cantidad,
-            "Cproducto": Cproducto
-        })
-       
-
+    cursor.execute("""
+        DELETE FROM Detalle_Pedido
+        WHERE Cpedido = :Cpedido
+    """, {
+        "Cpedido": Cpedido
+    })
+    cursor.execute("""
+        DELETE FROM Pedido
+        WHERE Cpedido = :Cpedido
+    """, {
+        "Cpedido": Cpedido
+    })
+    cursor.execute("""
+        UPDATE Stock
+        SET Cantidad = Cantidad + :cantidad_a_sumar
+        WHERE Cproducto = :Cproducto
+    """, {
+        "cantidad_a_sumar": Cantidad,
+        "Cproducto": Cproducto
+    })
+    if gui:
+        menu_principal(cursor)
+    else:
         menu(cursor)
-
-    except oracledb.DatabaseError as errorBD:
-        error = errorBD.args[0]
-        print("Error in database operation: ", error.message)
-        print("Error code: ", error.code)
-        cursor.connection.rollback()  # Revertir cambios en caso de error
-    except Exception as otroError:
-        print("Another error: ", otroError)
-        cursor.connection.rollback()
-
-    
-
 
 def Finalizar_pedido(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     cursor.connection.commit()
-
-    menu(cursor)
-    
-
+    if(not gui):
+        menu(cursor)
+    else:
+        root.destroy()
 
 def imprimir_menu():
     espaciado = 46
@@ -267,7 +331,6 @@ def imprimir_menu():
     print("[4] Salir.")
     print("=" * espaciado)
     
-
 def imprimir_menu_opcion2():
     espaciado = 46
     clear()
@@ -329,7 +392,7 @@ def menu_principal(cursor):
 def menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad):
     #Menu secundario
     clear_window(root)
-
+    global product_id_entry, quantity_entry
     # Etiqueta de título del menú secundario
     tk.Label(root, text="Gestionar Pedido", font=("Arial", 20)).pack(pady=10)
     
@@ -360,7 +423,7 @@ def menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad):
 
     # Botón para finalizar el pedido
     finalize_order_btn = tk.Button(root, text="Finalizar Pedido", font=("Arial", 15), 
-                                   command=lambda: Finalizar_pedido(cursor))
+                                   command=lambda: Finalizar_pedido(cursor, Cpedido, Ccliente, Fecha_pedido,Cproducto, Cantidad ))
     finalize_order_btn.pack(pady=10)
 
     global output_label_secundario
@@ -385,13 +448,14 @@ def create_gui(cursor):
 
 
 def menu(cursor):
-    funciones = [opcion1,opcion2,opcion3,opcion4]
-    imprimir_menu()
-    opcion = int(input("Introduzca un número del 1 al 4: "))
-    while opcion not in range(1,5):
-        print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
-        opcion = int(input())
-    funciones[opcion-1](cursor)
+    if(not gui):
+        funciones = [opcion1,opcion2,opcion3,opcion4]
+        imprimir_menu()
+        opcion = int(input("Introduzca un número del 1 al 4: "))
+        while opcion not in range(1,5):
+            print("Debe introducir un número entre el 1 y el 4", file=sys.stderr)
+            opcion = int(input())
+        funciones[opcion-1](cursor)
 
 
 def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
@@ -407,21 +471,39 @@ def menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
     
 
 def main():
-    try: 
+    global gui
+    try:
+        if(len(sys.argv) == 2 and sys.argv[1] == "--no-gui"):
+            gui = False
         user, password, dsn = get_credentials()
         conexion = oracledb.connect(user=user, password=password, dsn=dsn)
         cursor = conexion.cursor()
         # Solicitudes y resto de codigo aquí
-        create_gui(cursor)
-        menu(cursor)  
+        if(gui):
+            create_gui(cursor)
+        else:
+            menu(cursor)  
     except oracledb.DatabaseError as errorBD:   #Error al establecer la conexión de la base de datos
         error = errorBD.args[0]
-        print("Error connecting to the database: ", error.message)
-        print("Error code: ", error.code)
+        if(gui):
+            output_label.config(text="Error connecting to the database: " + error.message)
+            output_label.config(text="Error code: " + error.code)
+        else:
+            print("Error connecting to the database: ", error.message)
+            print("Error code: ", error.code)
+        cursor.connection.rollback()
     except KeyboardInterrupt:   #Si hacemos control + c
-        print("\nSaliendo con Ctrl+C...")
+        if(gui):
+            output_label.config(text="Saliendo con Ctrl+C...")
+        else:
+            print("\nSaliendo con Ctrl+C...")
+        cursor.connection.rollback()
     except Exception as otroError:  #Otro tipo de error
-        print("Another error: ", otroError)
+        if(gui):
+            output_label.config(text="Another error: " + otroError.args[0])
+        else:
+            print("Another error: ", otroError.args[0])
+        cursor.connection.rollback()
     finally:    #Al final, pase lo que pase se cierran el cursor y la conexión
         cursor.close()
         conexion.close()

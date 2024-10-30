@@ -132,6 +132,18 @@ def opcion2(cursor):
         Cpedido= int(input("Codigo del pedido: "))
         Ccliente = int(input("Codigo del cliente: "))
         fecha = input("Introduce una fecha (formato dd/mm/aaaa): ")
+    if Cpedido <0:
+        if gui:
+            output_label.config(text="Codigo de pedido incorrecto")
+        else:
+            print("Codigo de pedido incorrecto")
+        return
+    if Ccliente <0:
+        if gui:
+            output_label.config(text="Codigo de cliente incorrecto")
+        else:
+            print("Codigo de cliente incorrecto")
+        return
     try:
         fecha2 = datetime.strptime(fecha, "%d/%m/%Y")
     except ValueError:
@@ -162,8 +174,6 @@ def opcion2(cursor):
         menu_secundario(cursor,Cpedido,Ccliente,Fecha_pedido, Cproducto, Cantidad)
     else:
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
-    
-    cursor.connection.commit()
     
 
 #Función para mostrar el contenido de todas las tablas: Stock, Pedido, y Detalle_Pedido.
@@ -206,12 +216,13 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         else:
             print("Codigo de producto incorrecto")
         return
-    if Cantidad > Cantidad_disponible and gui:
-        output_label_secundario.config(text="Cantidad del producto incorrecta")
-        return
-    if Cantidad > Cantidad_disponible and not gui:
-        while Cantidad > Cantidad_disponible:
-            Cantidad = int(input("Cantidad invalida, introduzcala de nuevo: "))
+    if Cantidad > Cantidad_disponible or Cantidad <=0:
+        if gui:
+            output_label_secundario.config(text="Cantidad del producto incorrecta")
+            return
+        else:
+            while Cantidad > Cantidad_disponible:
+                Cantidad = int(input("Cantidad invalida, introduzcala de nuevo: "))
         
     cursor.execute("""
         UPDATE Stock
@@ -237,7 +248,17 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
-
+    cursor.execute("""SELECT * FROM Detalle_Pedido WHERE Cpedido = :Cpedido""", {"Cpedido": Cpedido})
+    if cursor.fetchone() == None:
+        if gui:
+            output_label_secundario.config(text="No hay detalles que eliminar")
+        else:
+            print("No hay detalles que eliminar")
+        return
+    cursor.execute("""SELECT Cproducto, Cantidad FROM Detalle_Pedido WHERE Cpedido = :Cpedido""", {"Cpedido": Cpedido})
+    data = cursor.fetchall()
+    Cantidad = data[0][1]
+    Cproducto = data[0][0]
     cursor.execute("""
         DELETE FROM Detalle_Pedido
         WHERE Cpedido = :Cpedido
@@ -255,7 +276,6 @@ def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         "Cproducto": Cproducto
     })
     
-    Cantidad = 0
     if gui:
         output_label_secundario.config(text="Detalles eliminados correctamente")
     else:

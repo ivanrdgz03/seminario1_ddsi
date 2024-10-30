@@ -30,27 +30,6 @@ def get_credentials():
     finally:
         file.close()
     return [user, password, dsn]
-#Función para obtener las instrucciones de creación de la tabla del archivo "create_table.sql", 
-# estas instrucciones deben tener cada una al final ";" obligatoriamente.
-def get_create_table_query(cursor):
-    try:
-        directorio = os.path.dirname(__file__)
-        archivo = os.path.join(directorio, 'create_tables.sql')
-        with open(archivo, 'r') as file:
-            sql_script = file.read()
-            
-        sql_commands = sql_script.split(';')
-        
-        for command in sql_commands:
-            cursor.execute(command)
-            
-    except FileNotFoundError as errorArchivo:
-        if gui:
-            output_label.configure(text="Error reading the file: " + errorArchivo.args[0])
-        else:
-            print("Error reading the file: ", errorArchivo.args[0])
-    finally:
-        file.close()
         
 #Esta función limpia la pantalla de la consola, para cuando se haga el menú
 def clear():
@@ -183,7 +162,7 @@ def opcion3(cursor):
     if(gui):
         # Crea una nueva ventana para mostrar las tablas
         ventana_tablas = tk.Toplevel(root)
-        ventana_tablas.geometry('1300x600')
+        ventana_tablas.geometry('950x600')
         ventana_tablas.title("Contenido de las Tablas")
 
         # Recorre cada tabla y muestra su contenido

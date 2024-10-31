@@ -213,6 +213,7 @@ def opcion4(cursor):
 
 
 def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
+    cursor.execute("Savepoint añadir_detalle")
     if gui:
         Cproducto = int(product_id_entry.get())
         Cantidad = int(quantity_entry.get())
@@ -261,34 +262,7 @@ def Añadir_detalle(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
         menu_opcion2(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad)
 
 def Eliminar_detalles(cursor,Cpedido,Ccliente,Fecha_pedido,Cproducto,Cantidad):
-    cursor.execute("""SELECT * FROM Detalle_Pedido WHERE Cpedido = :Cpedido""", {"Cpedido": Cpedido})
-    if cursor.fetchone() == None:
-        if gui:
-            output_label_secundario.config(text="No hay detalles que eliminar")
-        else:
-            print("No hay detalles que eliminar")
-        return
-    cursor.execute("""SELECT Cproducto, Cantidad FROM Detalle_Pedido WHERE Cpedido = :Cpedido""", {"Cpedido": Cpedido})
-    data = cursor.fetchall()
-    Cantidad = data[0][1]
-    Cproducto = data[0][0]
-    cursor.execute("""
-        DELETE FROM Detalle_Pedido
-        WHERE Cpedido = :Cpedido
-    """, {
-        "Cpedido": Cpedido
-    })
-     
-    
-    cursor.execute("""
-        UPDATE Stock
-        SET Cantidad = Cantidad + :cantidad_a_sumar
-        WHERE Cproducto = :Cproducto
-    """, {
-        "cantidad_a_sumar": Cantidad,
-        "Cproducto": Cproducto
-    })
-    
+    cursor.execute("ROLLBACK TO añadir_detalle")
     if gui:
         output_label_secundario.config(text="Detalles eliminados correctamente")
     else:
